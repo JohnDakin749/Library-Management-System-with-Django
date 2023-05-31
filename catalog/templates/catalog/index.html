@@ -1,0 +1,21 @@
+{% extends 'base_generic.html'%}
+{% block title%}
+    <title>LocalLibrary Homepage</title>
+{% endblock %}
+{% block content %}
+    <h1>Local Library Home</h1>
+    <p>Welcome to Local Library,a website developed by <em>John Dakin</em>!</p>
+    <h2>Dymanic content</h2>
+    <p>The library has the following record counts:</p>
+    <ul>
+        <li><strong>Books:</strong>{{num_books}}</li>
+        <li><strong>Copies:</strong>{{num_instances}}</li>
+        <li><strong>Copies available:</strong>{{num_instances_available}}</li>
+        <li><strong>Authors:</strong>{{num_authors}}</li>
+        <li><strong>Genres Available:</strong>{{num_genres}}</li>
+        <li><strong>Books Containing the word</strong><q>theme</q>:{{particular_word}}</li>
+    </ul>
+    <p>
+        You have visited this page {{num_visits}} time{{num_visits|pluralize}}
+    </p>
+{% endblock %}
