@@ -1,8 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from.models import Author,Book,BookInstance,Genre,Language
 from django.views import generic
+import datetime
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from catalog.forms import RenewBookForm
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from django.contrib.auth.decorators import login_required,permission_required
+from django.views.generic.edit import CreateView,UpdateView,DeleteView
+from django.urls import reverse_lazy
+from catalog.models import Author
 
 def index(request):
     num_books = Book.objects.all().count()
@@ -57,4 +64,52 @@ class LoanedBooksAllListView(PermissionRequiredMixin,generic.ListView):
 @login_required
 @permission_required('catalog.can_mark_returned',raise_exception=True)
 def renew_book_librarian(request,pk):
-    return render(request,'catalog/book_renew_librarian.html')
+    book_instance = get_object_or_404(BookInstance,pk=pk)
+    
+    if request.method == 'POST':
+        form = RenewBookForm(request.POST)
+        if form.is_valid():
+            book_instance.due_back = form.cleaned_data['renewal_date']
+            book_instance.save()
+            return HttpResponseRedirect(reverse('all-borrowed'))
+    
+    else:
+        proposed_renewal_date = datetime.date.today() + datetime.timedelta(weeks=3)
+        form = RenewBookForm(initial={'renewal_date':proposed_renewal_date})
+        
+        context={
+            'form':form,
+            'book_instance':book_instance,
+        }
+    return render(request,'catalog/book_renew_librarian.html',context)
+
+class AuthorCreate(CreateView):
+    model = Author
+    fields = ['first_name','last_name','date_of_death']
+    initial = {'date_of_death':'11/06/2020'}
+    permission_required = 'catalog.can_mark_returned'
+class Authorupdate(UpdateView):
+    model = Author
+    fields = '__all__'
+    permission_required = 'catalog.can_mark_returned'
+    
+class AuthorDelete(DeleteView):
+    model = Author
+    success_url = reverse_lazy('author')
+    permission_required = 'catalog.can_mark_returned'
+    
+class BookCreate(PermissionRequiredMixin, CreateView):
+    model = Book
+    fields = ['title','author','summary','isbn','genre','language']
+    permission_required = 'catalog.can_mark_returned'
+    
+class BookUpdate(PermissionRequiredMixin,UpdateView):
+    model = Book
+    model = Book
+    fields = ['title','author','summary','isbn','genre','language']
+    permission_required = 'catalog.can_mark_returned'
+    
+class BookDelete(PermissionRequiredMixin,DeleteView):
+    model = Book
+    success_url = reverse_lazy('books')
+    permission_required = 'catalog.can_mark_returned'
